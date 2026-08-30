@@ -45,6 +45,10 @@ You can also right-click the tray icon and choose **Set port…**. That choice i
 
 ## Send a notification
 
+<p align="center">
+  <img src="Resources/agentnotify-startup-toast-blue.png" alt="AgentNotify startup notification with a blue faded border and shadow" width="720">
+</p>
+
 First, verify that the service is running:
 
 ```powershell
