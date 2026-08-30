@@ -10,11 +10,21 @@
 
 AgentNotify runs a localhost-only HTTP service and lives quietly in the Windows notification area. Send one JSON request when a task finishes, fails, needs attention, or has useful progress to report; AgentNotify turns it into a native Windows toast.
 
+## Why AgentNotify
+
+AgentNotify is especially useful when your agent runs through a CLI in WSL, where native Windows notifications are not readily available. It also fits agent harnesses inside VS Code (and similar local development environments) that need a simple, dependable way to surface completion, failure, and attention-needed events.
+
+In short, any agent running on your local machine can send a request to AgentNotify and produce a native Windows toast—with the appropriate sound included—without needing its own notification integration.
+
 ## Features
 
 - **Local by design** — the listener is bound to `localhost`; it is not exposed to the network.
 - **Native Windows toasts** — notifications include a level-specific title, sound, source label, and the task-complete robot artwork.
 - **Four notification levels** — `info`, `success`, `warning`, and `error`, each with sensible defaults.
+  - `info` uses the default Windows notification sound.
+  - `success` uses the reminder sound.
+  - `warning` uses the Alarm 2 sound.
+  - `error` uses the alarm sound.
 - **Open links from a toast** — optionally add an `http`, `https`, `vscode`, `vscode-insiders`, or `cursor` URL to an **Open** button.
 - **Tray controls** — see the current listener port, change it, or exit from the system-tray menu.
 - **Port persistence** — the selected port is remembered for the next launch; the default is `47821`.
