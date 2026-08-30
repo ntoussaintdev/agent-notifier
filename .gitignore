@@ -1,0 +1,23 @@
+# Build and publish output
+[Bb]in/
+[Oo]bj/
+publish/
+
+# Project-local .NET tooling and package caches
+.dotnet/
+.dotnet-cli-home/
+.nuget-packages/
+.dotnet-install.ps1
+dotnet-sdk-*-win-x64.exe
+aspnetcore-runtime-*-win-x64.exe
+WindowsAppRuntimeInstall-*.exe
+
+# IDE and user-specific files
+.vs/
+*.user
+*.suo
+
+# Keep only the project-owned AgentNotify skill.
+.agents/skills/*
+!.agents/skills/agent-notifier/
+!.agents/skills/agent-notifier/**
