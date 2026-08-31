@@ -11,7 +11,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Windows.AppNotifications;
 using Microsoft.Windows.AppNotifications.Builder;
 
-namespace AgentNotify;
+namespace AgentNotifier;
 
 internal static class Program
 {
@@ -22,12 +22,12 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
-        using var singleInstance = new Mutex(true, @"Local\AgentNotify.Server.47821", out bool createdNew);
+        using var singleInstance = new Mutex(true, @"Local\AgentNotifier.Server.47821", out bool createdNew);
         if (!createdNew) return;
 
         if (!TryGetStartupPort(args, out int port, out string? portError))
         {
-            MessageBox.Show(portError, "AgentNotify", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(portError, "AgentNotifier", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return;
         }
 
@@ -45,7 +45,7 @@ internal static class Program
             server = StartServer(notificationManager, port);
             server.StartAsync().GetAwaiter().GetResult();
             SaveLastPort(port);
-            Log($"AgentNotify started on http://localhost:{port}");
+            Log($"AgentNotifier started on http://localhost:{port}");
             ShowStartupNotification(notificationManager, port);
             using var portChangeGate = new SemaphoreSlim(1, 1);
             using var tray = new TrayApplicationContext(port, async newPort =>
@@ -84,7 +84,7 @@ internal static class Program
                     try { await previous.DisposeAsync(); }
                     catch (Exception disposeError) { Log($"Previous server disposal error: {disposeError}"); }
 
-                    Log($"AgentNotify moved to http://localhost:{port}");
+                    Log($"AgentNotifier moved to http://localhost:{port}");
                     ShowPortChangedNotification(
                         notificationManager!,
                         previousPort,
@@ -131,15 +131,15 @@ internal static class Program
         catch (Exception ex)
         {
             Log($"FATAL: {ex}");
-            MessageBox.Show($"""
-                AgentNotify could not start.
+                MessageBox.Show($"""
+                    AgentNotifier could not start.
 
-                {ex.Message}
+                    {ex.Message}
 
-                Log file:
+                    Log file:
 
-                {GetLogFilePath()}
-                """, "AgentNotify", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    {GetLogFilePath()}
+                    """, "AgentNotifier", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
         finally
         {
@@ -154,7 +154,7 @@ internal static class Program
                 try { notificationManager.Unregister(); Log("Windows notification manager unregistered."); }
                 catch (Exception ex) { Log($"Notification unregister error: {ex}"); }
             }
-            Log("AgentNotify stopped.");
+            Log("AgentNotifier stopped.");
         }
     }
 
@@ -267,7 +267,7 @@ internal static class Program
         {
             _port = port;
             _menu = new ContextMenuStrip();
-            var nameItem = new ToolStripMenuItem("AgentNotify") { Enabled = false };
+            var nameItem = new ToolStripMenuItem("AgentNotifier") { Enabled = false };
             _statusItem = new ToolStripMenuItem($"Listening on localhost:{port}") { Enabled = false };
             var setPortItem = new ToolStripMenuItem("Set port…");
             var exitItem = new ToolStripMenuItem("Exit");
@@ -289,13 +289,13 @@ internal static class Program
                     {
                         _port = newPort;
                         _statusItem.Text = $"Listening on localhost:{newPort}";
-                        _notifyIcon!.Text = $"AgentNotify - localhost:{newPort}";
+                        _notifyIcon!.Text = $"AgentNotifier - localhost:{newPort}";
                     }
                     else
                     {
                         MessageBox.Show(
                             result.Error,
-                            "AgentNotify",
+                            "AgentNotifier",
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Error);
                     }
@@ -309,7 +309,7 @@ internal static class Program
             exitItem.Click += (_, _) => { _notifyIcon!.Visible = false; ExitThread(); };
             _menu.Items.Add(nameItem); _menu.Items.Add(_statusItem); _menu.Items.Add(new ToolStripSeparator()); _menu.Items.Add(setPortItem); _menu.Items.Add(exitItem);
             Icon appIcon = Icon.ExtractAssociatedIcon(Application.ExecutablePath) ?? SystemIcons.Exclamation;
-            _notifyIcon = new NotifyIcon { Icon = appIcon, Text = $"AgentNotify - localhost:{port}", ContextMenuStrip = _menu, Visible = true };
+            _notifyIcon = new NotifyIcon { Icon = appIcon, Text = $"AgentNotifier - localhost:{port}", ContextMenuStrip = _menu, Visible = true };
         }
 
         private static int? PromptForPort(int currentPort)
@@ -317,7 +317,7 @@ internal static class Program
             using Image? taskCompleteImage = LoadTaskCompleteImage();
             using var dialog = new Form
             {
-                Text = "Set AgentNotify port",
+                Text = "Set AgentNotifier port",
                 FormBorderStyle = FormBorderStyle.FixedDialog,
                 MaximizeBox = false,
                 MinimizeBox = false,
@@ -329,7 +329,7 @@ internal static class Program
             input.Enter += (_, _) => input.SelectAll();
             var detail = new Label
             {
-                Text = "AgentNotify will stop listening, then start on the selected port.",
+                Text = "AgentNotifier will stop listening, then start on the selected port.",
                 Location = new Point(197, 98),
                 Size = new Size(264, 48)
             };
@@ -351,7 +351,7 @@ internal static class Program
                 if (TryParsePort(input.Text, out int port))
                     return port;
 
-                MessageBox.Show("Enter a whole number from 1 to 65535.", "AgentNotify", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Enter a whole number from 1 to 65535.", "AgentNotifier", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
 
             return null;
@@ -400,10 +400,10 @@ internal static class Program
         try
         {
             var toastBuilder = new AppNotificationBuilder()
-                .AddText("AgentNotify port changed")
+                .AddText("AgentNotifier port changed")
                 .AddText(
                     $"Listening moved from localhost:{previousPort} to localhost:{newPort}.")
-                .AddText("SUCCESS • AgentNotify")
+                .AddText("SUCCESS • AgentNotifier")
                 .SetAudioEvent(AppNotificationSoundEvent.Reminder);
 
             AddTaskCompleteImage(toastBuilder);
@@ -426,9 +426,9 @@ internal static class Program
         try
         {
             var toastBuilder = new AppNotificationBuilder()
-                .AddText("AgentNotify started")
+                .AddText("AgentNotifier started")
                 .AddText($"Listening on localhost:{port}.")
-                .AddText("SUCCESS • AgentNotify")
+                .AddText("SUCCESS • AgentNotifier")
                 .SetAudioEvent(AppNotificationSoundEvent.Default);
 
             AddTaskCompleteImage(toastBuilder);
@@ -486,9 +486,9 @@ internal static class Program
         string result = string.IsNullOrWhiteSpace(value) ? fallback : value.Trim();
         return result.Length > maxLength ? result[..(maxLength - 1)] + "…" : result;
     }
-    private static string GetLogFilePath() => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AgentNotify", "agentnotify.log");
+    private static string GetLogFilePath() => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AgentNotifier", "agentnotify.log");
 
-    private static string GetSettingsFilePath() => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AgentNotify", "settings.json");
+    private static string GetSettingsFilePath() => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "AgentNotifier", "settings.json");
 
     private static int? LoadLastPort()
     {

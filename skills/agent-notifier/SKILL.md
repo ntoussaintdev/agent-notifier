@@ -7,7 +7,7 @@ metadata:
 
 # Notify User
 
-Use this skill to alert the user through the AgentNotify service running on
+Use this skill to alert the user through the AgentNotifier service running on
 their machine. Send the notification with a direct `curl` request; do not use
 or create helper scripts.
 
@@ -46,7 +46,7 @@ or superseded before it completes, do not notify.
 ## Request contract
 
 Send `POST` requests to `http://127.0.0.1:47821/notify`. Replace `47821` only
-when the active AgentNotify service is known to use another port.
+when the active AgentNotifier service is known to use another port.
 
 The JSON body requires:
 

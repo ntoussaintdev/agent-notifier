@@ -5,6 +5,7 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>Assets\agentnotify-task-complete-exclamation.ico</ApplicationIcon>
+    <AssemblyName>AgentNotifier</AssemblyName>
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

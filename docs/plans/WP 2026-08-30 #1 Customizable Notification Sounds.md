@@ -4,7 +4,7 @@ Origin: Direct discussion on 2026-08-30.
 
 ## Status and purpose
 
-Planned — not started. Allow users to customize AgentNotify's notification
+Planned — not started. Allow users to customize AgentNotifier's notification
 audio instead of relying solely on the built-in Windows sound mapping. The
 feature should support selecting a built-in Windows sound per notification
 level and, where Windows toast APIs permit it, using user-provided MP3, WAV,
