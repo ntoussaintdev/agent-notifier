@@ -4,7 +4,7 @@
 
 | Plan | Status | Started |
 | --- | --- | --- |
-| _None_ | — | — |
+| `WP 2026-08-30 #1 Customizable Notification Sounds.md` | Planned — research and design pending before implementation. | 2026-08-30 |
 
 ## Completed plans
 

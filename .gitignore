@@ -17,7 +17,5 @@ WindowsAppRuntimeInstall-*.exe
 *.user
 *.suo
 
-# Keep only the project-owned AgentNotify skill.
+# Project-local agent skills are not part of this repository's distribution.
 .agents/skills/*
-!.agents/skills/agent-notifier/
-!.agents/skills/agent-notifier/**
