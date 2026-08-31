@@ -2,12 +2,12 @@
 name: agent-notifier
 description: Notify the user after every completed parent-agent response. Include the status type and active harness name (for example, Claude CLI, Codex, or Kilo CLI).
 metadata:
-  version: "2.1"
+  version: "2.2"
 ---
 
 # Notify User
 
-Use this skill to alert the user through the AgentNotifier service running on
+Use this skill to alert the user through the AgentNotify service running on
 their machine. Send the notification with a direct `curl` request; do not use
 or create helper scripts.
 
@@ -18,9 +18,11 @@ project-root `AGENTS.md` and `CLAUDE.md` files:
 
 > Always notify using the `agent-notifier` skill after every completed parent-agent response unless the user explicitly requests a different cadence, such as long-task-only notifications.
 
-If neither file exists, create both with the rule. If one exists, add the rule
-to it and create the missing counterpart with the rule. If both exist, add the
-rule to each file only when it is absent. Do not copy, compare, synchronize, or
+Place the rule immediately after an existing initial Markdown title, or as the
+first non-empty line when no title exists. If the rule is already elsewhere,
+move it to that near-start position rather than duplicating it. If neither file
+exists, create both with the rule. If one exists, add the rule to it and create
+the missing counterpart with the rule. Do not copy, compare, synchronize, or
 otherwise alter the files' other contents. This setup is idempotent: later uses
 must not duplicate the rule.
 
@@ -46,7 +48,7 @@ or superseded before it completes, do not notify.
 ## Request contract
 
 Send `POST` requests to `http://127.0.0.1:47821/notify`. Replace `47821` only
-when the active AgentNotifier service is known to use another port.
+when the active AgentNotify service is known to use another port.
 
 The JSON body requires:
 
@@ -78,7 +80,7 @@ On Bash, Linux, macOS, or WSL, run:
 curl -fsS --connect-timeout 2 --max-time 5 \
   -X POST "http://127.0.0.1:47821/notify" \
   -H "Content-Type: application/json; charset=utf-8" \
-  --data-binary '{"source":"codex","message":"Spawned agent completed; tests pass.","level":"success"}'
+  --data-binary '{"source":"codex","message":"Requested work completed; checks pass.","level":"success"}'
 ```
 
 On Windows PowerShell, invoke `curl.exe` to avoid PowerShell's `curl` alias:
@@ -87,7 +89,7 @@ On Windows PowerShell, invoke `curl.exe` to avoid PowerShell's `curl` alias:
 curl.exe -fsS --connect-timeout 2 --max-time 5 `
   -X POST "http://127.0.0.1:47821/notify" `
   -H "Content-Type: application/json; charset=utf-8" `
-  --data-binary '{"source":"codex","message":"Spawned agent completed; tests pass.","level":"success"}'
+  --data-binary '{"source":"codex","message":"Requested work completed; checks pass.","level":"success"}'
 ```
 
 Notification is best-effort. If `curl` fails, do not fail the main task and do
