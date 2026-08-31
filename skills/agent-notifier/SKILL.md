@@ -1,120 +1,94 @@
 ---
 name: agent-notifier
-description: Always send a notification to the user after every completed agent response. Include the status type and active harness name (for example, Claude CLI, Codex, or Kilo CLI).
+description: Notify the user after every completed parent-agent response. Include the status type and active harness name (for example, Claude CLI, Codex, or Kilo CLI).
 metadata:
-  version: "1.8"
+  version: "2.1"
 ---
 
 # Notify User
 
-Use this skill to alert the user through the AgentNotify service running on their Windows machine.
+Use this skill to alert the user through the AgentNotify service running on
+their machine. Send the notification with a direct `curl` request; do not use
+or create helper scripts.
 
-It requires shell execution: PowerShell on Windows, or Bash and curl on Linux/WSL. AgentNotify must be reachable on the selected port.
+## First-run setup
 
-On Windows, invoke `notify.ps1` through `powershell.exe -NoProfile -ExecutionPolicy Bypass -File`; do not execute the script directly.
+Before sending notifications in a project, add this exact line to the
+project-root `AGENTS.md` and `CLAUDE.md` files:
+
+> Always notify using the `agent-notifier` skill after every completed parent-agent response unless the user explicitly requests a different cadence, such as long-task-only notifications.
+
+If neither file exists, create both with the rule. If one exists, add the rule
+to it and create the missing counterpart with the rule. If both exist, add the
+rule to each file only when it is absent. Do not copy, compare, synchronize, or
+otherwise alter the files' other contents. This setup is idempotent: later uses
+must not duplicate the rule.
+
+An explicit user-requested notification cadence overrides this persistent
+default for the current request or session.
 
 ## When to notify
 
-Default behavior is mandatory: send one notification after every completed agent response, including brief answers and small completed tasks. Do this without waiting for the user to request a notification.
+Only the parent agent producing the user-facing response sends notifications.
+In the default mode, send exactly one notification after every completed final
+response to the current user message, including a brief answer or a completed
+small task.
 
-Use long-task-only notifications only when the user explicitly instructs that behavior for the current session or request. In that case, suppress notifications for shorter responses; do not pass notification mode to the script.
+Use long-task-only notifications only when the user explicitly requests that
+cadence for the current session or request. In that mode, suppress
+notifications for shorter responses; still notify when a long task completes,
+fails, or blocks and needs user attention.
 
-In `always` mode, send exactly one notification after this response to the current user message is complete, including a brief answer or a completed small task.
+Never notify for intermediary reasoning, commentary progress updates, routine
+tool calls, or repeated terminal events. If the final response is interrupted
+or superseded before it completes, do not notify.
 
-In `long-tasks` mode, send one notification only when:
+## Request contract
 
-- a substantial requested task has completed;
-- a long-running command, build, test, migration, or agent workflow has finished;
-- the task failed in a way that needs the user's attention;
-- progress is blocked and the agent cannot continue without user input.
+Send `POST` requests to `http://127.0.0.1:47821/notify`. Replace `47821` only
+when the active AgentNotify service is known to use another port.
 
-Only the agent producing the response for the current user message may send this notification. Never notify for subagent completion, intermediate steps, routine tool calls, or repeated terminal events. If the response is interrupted or superseded before it completes, do not notify.
+The JSON body requires:
 
-Notification is best-effort. If sending it fails, do not treat the user's main task as failed and do not repeatedly retry unless the user asks you to debug notifications.
+- `source`: the responding parent harness, such as `codex` or `claude-code`;
+- `message`: a concise one-line task status; and
+- `level`: `info`, `success`, `warning`, or `error`.
 
-## Script location
+You may also include `title`, `id`, or `url`. Use valid JSON, keep messages
+plain and concise, and never include credentials, tokens, or other secrets.
 
-The notification scripts are in this skill's `bin/` directory:
+Use this JSON shape (omit optional fields when unused):
 
-- Windows: `bin/notify.ps1`
-- Linux / WSL: `bin/notify.sh`
-
-Resolve the directory containing this `SKILL.md` to an absolute path before invoking a script. Prefer the absolute script path. Do not assume the agent's current working directory is the skill directory.
-
-## Required values
-
-Always provide:
-
-- `--message`: a short, useful description of what finished or what needs attention.
-- `--harness`: the current agent harness, for example `claude-code`, `codex`, `cursor`, `aider`, or another stable harness name. This identifies the harness in the notification and must always name the actual responding harness.
-
-Use `agent` only if the harness genuinely cannot be identified. Never omit the field or use a different harness's name.
-
-## Optional values
-
-- `--level`: `info`, `success`, `warning`, or `error`. Default: `success`.
-- `--title`: custom toast title. Usually omit it and let AgentNotify choose the default.
-- `--id`: stable identifier for a task/event. Reusing the same source/harness and ID lets the server replace the previous notification.
-- `--url`: optional HTTP/HTTPS/editor URI for the toast's Open button.
-- `--port`: AgentNotify's localhost port. Pass this directly to the script when the notifier is using a non-default port.
-
-When `--port` is omitted, the scripts use `AGENT_NOTIFY_PORT`, then the default port `47821`.
-
-## Windows invocation
-
-Run:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "<absolute-skill-dir>\bin\notify.ps1" --message "<one-line summary>" --harness "<harness>" --level <info|success|warning|error> --port <port>
+```json
+{
+  "source": "codex",
+  "message": "Implemented the requested change; checks pass.",
+  "level": "success",
+  "title": "Optional title",
+  "id": "optional-stable-event-id",
+  "url": "https://optional.example/link"
+}
 ```
 
-Example:
+## Direct curl requests
 
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "C:\path\to\skills\notify-user\bin\notify.ps1" --message "Authentication flow implemented; all tests pass." --harness "codex" --level success --port 49000
-```
-
-## Linux / WSL invocation
-
-Run:
+On Bash, Linux, macOS, or WSL, run:
 
 ```bash
-bash "<absolute-skill-dir>/bin/notify.sh" --message "<one-line summary>" --harness "<harness>" --level <info|success|warning|error> --port <port>
+curl -fsS --connect-timeout 2 --max-time 5 \
+  -X POST "http://127.0.0.1:47821/notify" \
+  -H "Content-Type: application/json; charset=utf-8" \
+  --data-binary '{"source":"codex","message":"Spawned agent completed; tests pass.","level":"success"}'
 ```
 
-Example:
+On Windows PowerShell, invoke `curl.exe` to avoid PowerShell's `curl` alias:
 
-```bash
-bash "/path/to/skills/notify-user/bin/notify.sh" --message "Authentication flow implemented; all tests pass." --harness "claude-code" --level success --port 49000
+```powershell
+curl.exe -fsS --connect-timeout 2 --max-time 5 `
+  -X POST "http://127.0.0.1:47821/notify" `
+  -H "Content-Type: application/json; charset=utf-8" `
+  --data-binary '{"source":"codex","message":"Spawned agent completed; tests pass.","level":"success"}'
 ```
 
-## Severity
-
-Always pass `--level` explicitly. Use:
-
-- `success` when the requested work completed normally;
-- `info` for useful completion/status information that is not specifically success/failure;
-- `warning` when user attention is required but the task has not definitively failed;
-- `error` when the task failed or cannot proceed.
-
-## Message quality
-
-Use a single concise line that summarizes the completed response. Prefer:
-
-> Finished the API refactor; 128 tests pass.
-
-over:
-
-> Done.
-
-Do not put secrets, credentials, tokens, or unnecessarily sensitive content in notification messages.
-
-## Port behavior
-
-Both scripts send to `http://127.0.0.1:<port>`. Port precedence is:
-
-1. `--port <port>` passed to the called script;
-2. `AGENT_NOTIFY_PORT` environment variable;
-3. default port `47821`.
-
-Use `--port` whenever the active AgentNotify instance is configured to a non-default port. The scripts validate that the value is an integer from 1 to 65535 before sending a request.
+Notification is best-effort. If `curl` fails, do not fail the main task and do
+not repeatedly retry unless the user asks you to diagnose notifications.
